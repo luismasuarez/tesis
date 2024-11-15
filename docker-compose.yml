@@ -7,7 +7,7 @@ networks:
 
 services:
   # Servicio de Gitea (Servidor Git)
-  server:
+  gitea_service:
     image: gitea/gitea:1.22.3
     container_name: gitea_service
     environment:
@@ -48,6 +48,8 @@ services:
   jenkins_service:
     image: jenkins/jenkins:lts
     container_name: jenkins_service
+    environment:
+      - JENKINS_PREFIX=/jenkins
     user: root
     expose:
       - 8080
@@ -68,26 +70,5 @@ services:
     networks:
       - devops
     depends_on:
-      - server
+      - gitea_service
       - jenkins_service
-
-  # gitlab:
-  #   image: gitlab/gitlab-ce:17.3.7-ce.0
-  #   container_name: gitlab
-  #   restart: always
-  #   networks:
-  #     - gitea
-  #   hostname: 'gitlab.example.com'
-  #   environment:
-  #     GITLAB_OMNIBUS_CONFIG: |
-  #       # Add any other gitlab.rb configuration here, each on its own line
-  #       external_url 'https://gitlab.example.com'
-  #   ports:
-  #     - '80:80'
-  #     - '443:443'
-  #     - '22:22'
-  #   volumes:
-  #     - '$GITLAB_HOME/config:/etc/gitlab'
-  #     - '$GITLAB_HOME/logs:/var/log/gitlab'
-  #     - '$GITLAB_HOME/data:/var/opt/gitlab'
-  #   shm_size: '256m'
