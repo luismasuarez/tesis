@@ -1,0 +1,93 @@
+version: "3"
+
+# Definimos las redes para que los servicios se comuniquen entre sí
+networks:
+  devops:
+    external: false
+
+services:
+  # Servicio de Gitea (Servidor Git)
+  server:
+    image: gitea/gitea:1.22.3
+    container_name: gitea_service
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=db:5432
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=gitea
+      - GITEA__database__PASSWD=${GITEA_DB_PASSWD}
+    restart: always
+    networks:
+      - devops
+    volumes:
+      - ./gitea:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    expose:
+      - 3000
+    depends_on:
+      - db
+
+  # Servicio de PostgreSQL (Base de datos para Gitea)
+  db:
+    image: postgres:14
+    container_name: postgres_service
+    restart: always
+    environment:
+      - POSTGRES_USER=gitea
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=gitea
+    networks:
+      - devops
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+
+  # Servicio de Jenkins (Automatización de CI/CD)
+  jenkins_service:
+    image: jenkins/jenkins:lts
+    container_name: jenkins_service
+    user: root
+    expose:
+      - 8080
+    networks:
+      - devops
+    volumes:
+      - ./jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_service
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+    networks:
+      - devops
+    depends_on:
+      - server
+      - jenkins_service
+
+  # gitlab:
+  #   image: gitlab/gitlab-ce:17.3.7-ce.0
+  #   container_name: gitlab
+  #   restart: always
+  #   networks:
+  #     - gitea
+  #   hostname: 'gitlab.example.com'
+  #   environment:
+  #     GITLAB_OMNIBUS_CONFIG: |
+  #       # Add any other gitlab.rb configuration here, each on its own line
+  #       external_url 'https://gitlab.example.com'
+  #   ports:
+  #     - '80:80'
+  #     - '443:443'
+  #     - '22:22'
+  #   volumes:
+  #     - '$GITLAB_HOME/config:/etc/gitlab'
+  #     - '$GITLAB_HOME/logs:/var/log/gitlab'
+  #     - '$GITLAB_HOME/data:/var/opt/gitlab'
+  #   shm_size: '256m'

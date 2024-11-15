@@ -1,0 +1,5 @@
+.env
+/jenkins_home
+/gitlab
+/gitea
+/postgres
