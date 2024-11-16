@@ -179,3 +179,18 @@ Guarda este archivo en el mismo directorio que tu archivo `docker-compose.yml`.
    ```
 
 Con estos pasos, tus servicios estarán accesibles mediante los dominios locales configurados. 😊
+
+
+## Resoluccion de bugs
+
+### Gitea Webhooks delivery
+
+En este caso al configurar nginx para el manejo de mis servicios mediante un dominio local en mi pc anfitrion, provoca un error de comunicacion entre gitea y jenkins, pr lo que ls procesos de integracion continua autmaticos no funcionan pr es se debe agregar lo siguiente en el archivo `docker-compose.yml`:
+
+```
+    environment:
+      - GITEA__webhook__ALLOWED_HOST_LIST=jenkins.myservice.net
+      - GITEA__webhook__SKIP_TLS_VERIFY=true
+```
+
+se debe tener en cuenta que esta cnfiguracion debe cambiar en un entorno de produccion.
